@@ -4,9 +4,13 @@ import os
 import psycopg2
 from psycopg2 import sql
 import time
+import logging
 
 app = Flask(__name__)
 CORS(app)
+
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
 
 db_host = os.getenv('DB_HOST')
 db_port = os.getenv('DB_PORT')
@@ -20,13 +24,13 @@ conn = None
 for i in range(10):
     try:
         conn = psycopg2.connect(DATABASE_URL)
-        print("Connection successful")
+        logger.info("Connection successful")
         break
     except psycopg2.OperationalError:
-        print("PostgreSQL connection failed, will retry...")
+        logger.error("PostgreSQL connection failed, will retry...")
         time.sleep(5)
 else:
-    print("PostgreSQL connection could not be established, terminating the program...")
+    logger.critical("PostgreSQL connection could not be established, terminating the program...")
     exit(1)
 
 cur = conn.cursor()
@@ -43,14 +47,18 @@ conn.commit()
 
 @app.route('/submit', methods=['POST'])
 def submit():
-    data = request.get_json()
-    value1 = data['value1']
-    value2 = data['value2']
+    try:
+        data = request.get_json()
+        value1 = data['value1']
+        value2 = data['value2']
 
-    cur.execute(sql.SQL("INSERT INTO data (value1, value2) VALUES (%s, %s)"), [value1, value2])
-    conn.commit()
+        cur.execute(sql.SQL("INSERT INTO data (value1, value2) VALUES (%s, %s)"), [value1, value2])
+        conn.commit()
 
-    return jsonify({'message': 'Data submitted successfully!'})
+        return jsonify({'message': 'Data submitted successfully!'})
+    except Exception as e:
+        logger.error(f"Error occurred: {e}")
+        return jsonify({'message': 'An error occurred while submitting data'}), 500
 
 
 if __name__ == '__main__':

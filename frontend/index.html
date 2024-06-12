@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Form Example</title>
+    <script>
+        async function submitForm(event) {
+            event.preventDefault();
+            const value1 = document.getElementById('value1').value;
+            const value2 = document.getElementById('value2').value;
+
+            const response = await fetch('http://34.138.243.189/submit', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ value1, value2 }),
+            });
+
+            const result = await response.json();
+            alert(result.message);
+        }
+    </script>
+</head>
+<body>
+    <form onsubmit="submitForm(event)">
+        <label for="value1">Value 1:</label>
+        <input type="text" id="value1" name="value1"><br><br>
+        <label for="value2">Value 2:</label>
+        <input type="text" id="value2" name="value2"><br><br>
+        <input type="submit" value="Submit">
+    </form>
+</body>
+</html>
